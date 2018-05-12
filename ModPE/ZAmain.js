@@ -7,15 +7,17 @@
 */
 	
 	// ===== Глобальные переменные ===== //
-var $rain, $lighting,$night,$game,$debug,$cmd;
-
 
 $rain = true; //Дождь при старте?
 $lighting = true; //Молнии при старте?
 $night = true; //Ночь при старте?
 $game = false; //Так надо....
+$newgame = true; //Не лезь!
 $debug = true; //Режим отладки
 $cmd = false; // Доступ к командам
+$tick = 0;
+$sec = 0;
+$minut = 0;
 
 	// ===== Переменные ===== //
 
@@ -23,44 +25,13 @@ $cmd = false; // Доступ к командам
 
 	// ===== Константы ===== //
 
-const items = {
-    syringe: 512,
-    ebonite: 516,
-    ebonitestick: 515,
-    detector: 514,
-    staff: 523
-}; //ID'шники всех вещей
-const foods = {
-    cocacola: 29,
-    lays: 33,
-    sandwich: 34,
-    fre: 36,
-    energy: 504,
-    sausage: 119,
-    jar: 506,
-    eggs: 507,
-    cheese: 509
-};
-const blocks = {
-    titanOre: 180,
-    nuclear: 179,
-    force_field: 255
-}; //ID'шники всех блоков
-const armor = {
-    zH: 416,
-    zC: 417,
-    zL: 418,
-    zB: 419,
-    gas:519
-};//ID'шники брони
-const give = [
-    armor.zH,
-    armor.zC,
-    armor.zL,
-    armor.zB
-];//ID'шники, для команды /armor
+const items = {shpriz: 512, ebonite: 516, ebonitestick: 515, detector: 514, staff: 523}; //ID'шники всех вещей
+const foods = {СocaСola: 29, lays: 33, sandwich: 34, fre: 36, energy: 504, kolbasa: 119, jar: 506, eggs: 507, cheese: 509};
+const blocks = {titanOre: 180, nuclear: 179, block: 530}; //ID'шники всех руд
+const armor = {zH: 416, zC: 417, zL: 418, zB: 419, gas:519};//ID'шники брони
+const give = [armor.zH, armor.zC, armor.zL, armor.zB];//ID'шники, для команды /armor
 
-const PLAYER = getPlayerEnt();
+const player = getPlayerEnt();
 
 //Создаём масивы с зомбарями =)
 
@@ -76,12 +47,11 @@ const count = 4; //Количество мобов (в массивах)
 
 // Мобы
 const mSkin = ['mob/zcow.png', 'mob/zPig.png']; //Скины мобов...
-const mXp = [10, 5, 15]; //Жизни мобов...
-const mDamage = [2, 0, 3]; //ДамагЭ мобов... (ага, именно =D)
+const mXp = [10, 5]; //Жизни мобов...
+const mDamage = [2, 0]; //ДамагЭ мобов... (ага, именно =D)
 const mName = ['§cЗомби корова', '§cЗомби свинья']; //"Имена"?!?!
 const mType = [32, 32]; //Реальные мобы =P
 const mRender = [6, 8]; //"Прикрытие" =З
-const mOriginal = [EntityType.COW, EntityType.PIG]; //Незараженный моб
 
 //Боссы
 const bSkin = ['mob/zBoss.png', 'mob/cow.png']; //Задолбался! 
@@ -90,15 +60,6 @@ const bDamage = [100, 0]; //ЗАДОЛБАЛСЯ!!!
 const bName = ['§cЗомби-страж', 'Корова'];
 const bType = [32, 32]; //...
 const bRender = [ EntityRenderType.ironGolem, 6]; //...
-
-/*//Кастомные мобы
-const cSkin = ['mob/zombie.png']; //Задолбался! 
-const cXp = [15]; //Серьёзно!!!
-const cDamage = [5]; //ЗАДОЛБАЛСЯ!!!
-const cName = ['§aДружелюбный зомби'];
-const cType = [EntityType.ironGolem]; //...
-const cRender = [ EntityRenderType.zombie]; //...*/
-
 
 //Текст для катсцен (количество, текст, текст2, текст n)
 const cs1 = [2, 'Тестовый', 'Текст'];
@@ -109,9 +70,9 @@ const cs1 = [2, 'Тестовый', 'Текст'];
 //Block.defineBlock(blocks.nuclear, 'Ядерная бомба',[['nuclear_up', 0],['nuclear_down', 0],['nuclear_side', 0],['nuclear_side', 0],['nuclear_side', 0],['nuclear_side', 0]], 0, true, 0);
 //Block.defineBlock(blocks.titanOre, 'Титановая руда',[['titan_ore', 0]], 0, true, 0);
 
-Block.defineBlock(blocks.force_field, 'Силовое поле',[['block', 0]], 0, false, 3); //Силовое поле
-Block.setLightLevel(blocks.force_field, 18);
-Block.setDestroyTime(blocks.force_field, 9999999);
+Block.defineBlock(blocks.block, 'Силовое поле',[['block', 0]], 0, false, 3); //Силовое поле
+Block.setLightLevel(blocks.block, 18);
+Block.setDestroyTime(blocks.block, 9999999);
 
 //Вещи
 
@@ -119,24 +80,37 @@ Block.setDestroyTime(blocks.force_field, 9999999);
 
 //Еда
 
-ModPE.setFoodItem(foods.cocacola, 'coca_cola' , 0, 1, 'Coca-Cola', 1);
-ModPE.setFoodItem(foods.energy, "energy", 9, "Энергетический напиток",16)
-ModPE.setFoodItem(foods.lays, 'lays' , 1, 5, 'Lays', 1);
-ModPE.setFoodItem(foods.sandwich, 'sandwich' , 2, 5, 'Sandwich', 4);
-ModPE.setFoodItem(foods.fre, 'fre' , 3, 5, 'French fries', 8);
-ModPE.setFoodItem(foods.eggs, 'eggs' , 7, 4, 'Яичница', 16);
-ModPE.setFoodItem(foods.cheese, 'cheese' , 5, 4, 'Сыр', 16);
-ModPE.setFoodItem(foods.jar, 'jar' , 4, 7, 'Консервы', 4);
-ModPE.setFoodItem(foods.sausage, 'sausage' , 6, 1, 'Колбаса', 1);
+ModPE.setFoodItem(500, 'Coca-Cola' , 0, 1, 'Coca-Cola', 1);
+ModPE.setFoodItem(food.energy, "Energy drink", 9, "Energy drink",16)
+ModPE.setFoodItem(501, 'Lays' , 1, 5, 'Lays', 1);
+ModPE.setFoodItem(502, 'Sandwich' , 2, 5, 'Sandwich', 4);
+ModPE.setFoodItem(503, 'French fries' , 3, 5, 'French fries', 8);
+ModPE.setFoodItem(507, 'Scrambled eggs' , 7, 4, 'Scrambled eggs', 16);
+ModPE.setFoodItem(508, 'Cheese' , 5, 4, 'Cheese', 16);
+ModPE.setFoodItem(506, 'Jar sprat' , 4, 7, 'Jar sprat', 4);
+ModPE.setFoodItem(505, 'Sausage' , 6, 1, 'Sausage', 1);
 
 //Броня
-Item.defineArmor(armor.zH, 'zombie_helmet', 0, 'Шлем из кожи зомби', 'armor/zombie_1.png', 2, 15, ArmorType.helmet);
+Item.defineArmor(armor.zH, 'zombie_helment', 0, 'Шлем из кожи зомби', 'armor/zombie_1.png', 2, 15, ArmorType.helment);
 Item.defineArmor(armor.zC, 'zombie_chestplate', 0, 'Нагрудник из кожи зомби', 'armor/zombie_1.png', 4, 28, ArmorType.chestplate);
 Item.defineArmor(armor.zL, 'zombie_leggings', 0, 'Поножи из кожи зомби', 'armor/zombie_2.png', 3, 25, ArmorType.leggings);
 Item.defineArmor(armor.zB, 'zombie_boots', 0, 'Ботинки из кожи зомби', 'armor/zombie_2.png', 2, 20, ArmorType.boots);
-Item.defineArmor(armor.gas, 'gas_mask', 0, 'Противогаз', 'armor/gasmask_1.png', 3, 25, ArmorType.helmet);
+Item.defineArmor(armor.gas, 'gas_mask', 0, 'Противогаз', 'armor/gasmask_1.png', 3, 25, ArmorType.helment);
 
 //Креатив
+Player.addItemCreativeInv(460, 1, 1);
+Player.addItemCreativeInv(461, 1, 1);
+Player.addItemCreativeInv(462, 1, 1);
+Player.addItemCreativeInv(463, 1, 1);
+Player.addItemCreativeInv(464, 1, 1);
+Player.addItemCreativeInv(465, 1, 1);
+Player.addItemCreativeInv(466, 1, 1);
+Player.addItemCreativeInv(15, 1, 1);
+Player.addItemCreativeInv(28, 1, 1);
+Player.addItemCreativeInv(25, 1, 1);
+Player.addItemCreativeInv(20, 1, 1);
+Player.addItemCreativeInv(179, 1, 1);
+Player.addItemCreativeInv(180, 1, 1);
 
 Player.addItemCreativeInv(armor.gas, 1, 1); //Противогаз
 Player.addItemCreativeInv(armor.zH, 1, 1); //зШлем
@@ -144,36 +118,28 @@ Player.addItemCreativeInv(armor.zC, 1, 1); //зНагрудник
 Player.addItemCreativeInv(armor.zL, 1, 1); //зПоножи
 Player.addItemCreativeInv(armor.zB, 1, 1); //зБотинки
 
-Player.addItemCreativeInv(foods.cocacola, 1, 0);
-Player.addItemCreativeInv(foods.energy, 1, 0);
-Player.addItemCreativeInv(foods.lays, 1, 0);
-Player.addItemCreativeInv(foods.sandwich, 1, 0);
-Player.addItemCreativeInv(foods.fre, 1, 0);
-Player.addItemCreativeInv(foods.eggs, 1, 0);
-Player.addItemCreativeInv(foods.cheese, 1, 0);
-Player.addItemCreativeInv(foods.jar, 1, 0);
-Player.addItemCreativeInv(foods.sausage, 1, 0);
+Player.addItemCreativeInv(500, 1, 0);
+Player.addItemCreativeInv(504, 1, 0);
+Player.addItemCreativeInv(501, 1, 0);
+Player.addItemCreativeInv(502, 1, 0);
+Player.addItemCreativeInv(503, 1, 0);
+Player.addItemCreativeInv(507, 1, 0);
+Player.addItemCreativeInv(508, 1, 0);
+Player.addItemCreativeInv(506, 1, 0);
+Player.addItemCreativeInv(505, 1, 0);
 
 //Крафт
 
-Item.addShapedRecipe(foods.cocacola, 1, 0, ['oao', 'obo', 'oco'], ['a', 351, 3, 'b', 353, 0, 'c', 325, 8]);
-Item.addShapedRecipe(foods.energy, 1, 0, ['bab', 'bab', 'bab'], ['a', 392, 0, 'b', 339, 0]);
-Item.addShapedRecipe(foods.lays, 4, 0, ['bbb', 'aaa', 'bbb'], ['a', 364, 0, 'b', 297, 0]);
-Item.addShapedRecipe(foods.sandwich, 8, 3, ['ooo', 'aaa', 'bbb'], ['a', 393, 0, 'b', 339, 0]);
-Item.addShapedRecipe(foods.fre, 1, 0, [' a ', ' a ', ' b '], ["a", 353, 0, 'b', 325, 8]); 
-Item.addShapedRecipe(foods.eggs, 2, 0, ['ooa', 'oao', 'aoo'], ['a', 319, 0]);
-Item.addShapedRecipe(foods.cheese, 4, 0, ['bbb', 'aaa', 'bbb'], ['a', 349, 0, 'b', 265, 0]);
+Item.addShapedRecipe(500, 1, 0, ['oao', 'obo', 'oco'], ['a', 351, 3, 'b', 353, 0, 'c', 325, 8]);
+Item.addShapedRecipe(504, 1, 0, [' a ', ' a ', ' b '], ["a", 353, 0, 'b', 325, 8]); 
+Item.addShapedRecipe(501, 1, 0, ['bab', 'bab', 'bab'], ['a', 392, 0, 'b', 339, 0]);
+Item.addShapedRecipe(502, 4, 0, ['bbb', 'aaa', 'bbb'], ['a', 364, 0, 'b', 297, 0]);
+Item.addShapedRecipe(503, 8, 3, ['ooo', 'aaa', 'bbb'], ['a', 393, 0, 'b', 339, 0]);
+Item.addShapedRecipe(506, 4, 0, ['bbb', 'aaa', 'bbb'], ['a', 349, 0, 'b', 265, 0]);
+Item.addShapedRecipe(505, 2, 0, ['ooa', 'oao', 'aoo'], ['a', 319, 0]);
 
-/*Item.addShapedRecipe(ID SHPRITSA, 1, 0, ['oao', 'obo', 'oco'], ['a', ID IGLY, 0, 'b', ID KOLBY, 0, 'c', 77, 0]);
-Item.addShapedRecipe(ID Igly, 3, 0, ['ooo', 'odo', 'odo'], ['d', 265, 0]);
-Item.addShapedRecipe(ID KOLBY, 1, 0, ['oao', 'oao', 'oao'], ['a', 102, 0]);
-Item.addShapedRecipe(ID GOTOVOVO SHPRITSA, 1, 0, ['oao', 'aba', 'oao'], ['a', ID CELEBNIE TRAV, 0, 'b', ID SHPRITSA, 0]);*/
-
-
-
-
-//Item.addFurnaceRecipe(344, 507, 0);
-//Item.addFurnaceRecipe(325, 508, 0);
+Item.addFurnaceRecipe(344, 507, 0);
+Item.addFurnaceRecipe(325, 508, 0);
 
 
 	// ===== Входит и выходит.... ===== //
@@ -195,6 +161,12 @@ function leaveGame() //Выход из игры
 
 function modTick() //Лагающая вещь...
 {
+	// Время
+	$tick++; //Захват тика
+	if($tick == 20){$sec++; $tick = 0;}; //Сколько это в секкундах
+	if($sec == 60){$minut++; $sec = 0;}; //Сколько в минутах
+	// -Время-
+	
 	$rain ? Level.setRainLevel(5) : Level.setRainLevel(0); //Защита от читеров
 	$lighting ? Level.setLightningLevel (5) : Level.setLightningLevel(0); //Защита от читеров
 	if($night){ //Зациклыть ночь
@@ -204,7 +176,7 @@ function modTick() //Лагающая вещь...
 		}
 	}
 	if(Player.getArmorSlot(0)==519){ //Противогаз
-		Entity.addEffect(PLAYER, 15, 20, 0, true, true); //Слепота
+		Entity.addEffect(player, 15, 20, 0, true, true); //Слепота
 	} 
 }
 
@@ -309,30 +281,20 @@ function useItem(x, y, z, item, block, side)
 			spawnBoss(x, y+1, z, 0);
 		break; 
 		//Эбонитовой палкой-силовое поле
-        case items.syringe:
-            Entity.addEffect(PLAYER, 6, 1*20, 1, true, false);
-            Entity.addEffect(PLAYER, 10, 31*20, 1, true, false);
 	}
 }
 
 	// ===== Тап по мобу ===== //
-
+/*
 function attackHook(a, n){
-    if(a==PLAYER){
-        var mob = Entity.getNameTag(n);
-        switch(Player.getCarriedItem()){
-            case items.syringe: //Лечение
-                for(var i in mName){
-                    if(mob.getNameTag == mName[i]){
-                        var a = Level.spawnMob(Entity.getX(n),Entity.getY(n),Entity.getZ(n), mOriginal[i]);
-                        Entity.remove(n);
-                    }
-                }
-            break;
-        }
-    }
-}
+	switch Player.getCarriedItem(){
+		case item.shpriz: //Лечение
+			
+		break;
+	}
 
+}
+*/
 	// ===== Смерть моба ===== //
 	
 // Дроп
@@ -346,11 +308,9 @@ function attackHook(a, n){
 	// ===== Съедание ===== //
 	
 function eatHook(h){
-    switch(getCarriedItem()){
-        case foor.energy:
-            Entity.addEffect(PLAYER, MobEffect.movementSpeed, 120*20,4, false, false);
-            Entity.addEffect(PLAYER, MobEffect.jump, 120*20,4, false, false);
-        break;
+	if(getCarriedItem()==foor.energy){
+		Entity.addEffect(player, MobEffect.movementSpeed, 120*20,4, false, false);
+		Entity.addEffect(player, MobEffect.jump, 120*20,4, false, false);
 	}
 }
 
