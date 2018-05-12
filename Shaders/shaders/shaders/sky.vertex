@@ -1,0 +1,35 @@
+#version 100
+
+uniform MAT4 WORLDVIEWPROJ;
+uniform vec4 FOG_COLOR;
+uniform vec4 CURRENT_COLOR;
+uniform float RENDER_DISTANCE;
+
+attribute mediump vec4 POSITION;
+attribute vec4 COLOR;
+
+uniform highp float TIME; // Time since the game started in seconds
+
+varying vec4 color;
+
+const float fogNear = 0.2;
+//const float rend = (RENDER_DISTANCE - 1024.0)/256.0;
+//const float rpos = (RENDER_DISTANCE);
+//rpos *= rpos;
+
+float calc_weather_value(){
+ //float tmp = min(1.1, max(0.4, (sin(TIME * 0.010 + 0.8j)) * 1.5));
+ return 0.1;
+}
+
+void main()
+{
+    gl_Position = WORLDVIEWPROJ * POSITION;
+
+    vec4 clr = CURRENT_COLOR-0.2815;
+    clr.g = max(clr.g, 0.1);
+    clr.r = max(clr.r, 0.5);
+    
+    vec4 gray = vec4(clr.r, clr.g, clr.g, clr.a);
+    color = mix(mix(clr, gray, calc_weather_value()), FOG_COLOR, COLOR.r );
+}

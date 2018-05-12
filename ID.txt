@@ -1,0 +1,36 @@
+Броня:
+Зомбячья броня: 416-419
+Титановая броня:
+
+
+
+Вещи:512-/*неизвестно
+Medkit:512
+Bandage:513
+Detector:514
+Ebonite stick:515
+Ebonite:516
+Knife:517
+Pill:518
+Gas mask:519
+ZLeather:520
+Shot gun:521
+Syringe:522
+Staff:523
+
+Еда: 500-512
+Coca-Cola:500
+Lays:501
+Sandwich:502
+French fries:503
+Energy drink:504
+Sausage:505
+Jar sprat:506
+Srambled eggs:507
+Cheese:508
+
+
+Блоки:530-/*неизвестно 
+Force fiel:530
+ 
+//Отличная работа! Добавь ещё и блоки(титановую руду, блок, бомбу и т.п.)

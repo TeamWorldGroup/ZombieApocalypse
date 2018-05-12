@@ -1,0 +1,27 @@
+#version 100
+/*
+################
+*******TeamWorldShaders**********
+by PROPHESSOR
+Все права защищены!
+Плагиатство карается по закону
+################
+*/
+
+uniform MAT4 WORLDVIEWPROJ;
+
+attribute mediump vec4 POSITION;
+attribute vec4 COLOR;
+
+varying vec4 color;
+uniform highp float TIME; 
+
+void main()
+{
+    vec4 pos = POSITION;
+    pos.x += tan(TIME * 20.0 + pos.y / 2.0) * 0.9;
+    pos.z += tan(TIME * 22.0 + pos.y / 3.0) * 0.9;
+    gl_Position = WORLDVIEWPROJ * pos;
+
+    color = COLOR;
+}

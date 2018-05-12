@@ -1,0 +1,20 @@
+#version 100
+/*
+################
+*******TeamWorldShaders**********
+by PROPHESSOR
+Все права защищены!
+Плагиатство карается по закону
+################
+*/
+
+varying vec4 color;
+uniform highp float TIME; 
+
+void main()
+{
+  vec4 c = color;
+  c.r *= 1.0;
+  c.a *= (sin(TIME * 20.0) + 1.75) * 0.9;
+	gl_FragColor = c;
+}
